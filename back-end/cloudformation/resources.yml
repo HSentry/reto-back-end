@@ -1,0 +1,38 @@
+Resources:
+
+  EventBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name: ${self:service}-event-bridge
+
+  SQS_PE:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: ${self:service}-sqs_pe
+      MessageRetentionPeriod: 1209600
+      VisibilityTimeout: 900
+  
+  SQS_CL:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: ${self:service}-sqs_cl
+      MessageRetentionPeriod: 1209600
+      VisibilityTimeout: 900
+
+  SQS:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: ${self:service}-sqs
+      MessageRetentionPeriod: 1209600
+      VisibilityTimeout: 900
+
+
+  PEAppointmentTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: ${self:service}-pe-topic-${self:provider.stage}
+      
+  CLAppointmentTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: ${self:service}-cl-topic-${self:provider.stage}

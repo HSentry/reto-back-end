@@ -1,0 +1,36 @@
+functions:  
+  appointment_pe:
+    handler: src/functions/appointment_pe.handler
+    name: ${self:service}-pe-${self:provider.stage}
+    events:
+      - sns:
+          topicName: ${self:service}-pe-topic-${self:provider.stage}
+          arn: !Ref PEAppointmentTopic
+    
+  appointment_cl:
+    handler: src/functions/appointment_cl.handler
+    name: ${self:service}-cl-${self:provider.stage}
+    events:
+      - sns:
+          topicName: ${self:service}-cl-topic-${self:provider.stage}
+          arn: !Ref CLAppointmentTopic
+
+  appointment:
+    handler: src/functions/appointment.handler
+    name: ${self:service}-${self:provider.stage}
+    # Function URL configuration
+    url: true  # This creates a function URL endpoint
+    # API Gateway endpoints
+    events:
+      - http:
+          path: /users
+          method: POST
+          cors: true
+      - http:
+          path: /users/{id}
+          method: GET
+          cors: true
+          request:
+            parameters:
+              paths:
+                id: true
