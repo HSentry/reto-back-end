@@ -1,23 +1,29 @@
+import { SQSEvent, Context } from 'aws-lambda';
+import { publishToEventBridge } from '@src/functions/helpers/eventBridgeHelper'
 
-
-export const handler = async (event: any): Promise<any> => {
+export const handler = async (event: SQSEvent, context: Context) => {
+  try {
     for (const record of event.Records) {
-        try {
-            // The SNS message is wrapped in the SQS message body
-            const snsMessage = JSON.parse(record.body);
-            const payload = JSON.parse(snsMessage.Message);
-
-            console.log('Processing CL appointment:', payload);
-            // Your CL appointment processing logic here
-
-        } catch (error) {
-            console.error('Error processing CL message:', error);
-            throw error;
+      const snsMessage = JSON.parse(record.body);
+      const payload = JSON.parse(snsMessage.Message);
+      
+      await publishToEventBridge(
+        'appointment.events',
+        'AppointmentProcessed',
+        {
+          type: 'PE',
+          data: payload,
+          timestamp: new Date().toISOString()
         }
+      );
     }
 
     return {
-        statusCode: 200,
-        body: JSON.stringify({ message: 'CL messages processed successfully' })
+      statusCode: 200,
+      body: JSON.stringify({ message: 'PE messages processed successfully' })
     };
+  } catch (error) {
+    console.error('Error in PE handler:', error);
+    throw error;
+  }
 };
