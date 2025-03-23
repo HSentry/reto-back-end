@@ -66,3 +66,72 @@ const publishToCL = async (message: any): Promise<void> => {
     throw error;
   }
 };
+
+
+export const handler = async (event: any): Promise<any> => {
+  // Check if the event is from SQS
+  if (event.Records) {
+      // Process SQS messages
+      for (const record of event.Records) {
+          try {
+              const body = JSON.parse(record.body);
+              console.log('Processing SQS message:', body);
+
+              // Your SQS message processing logic here
+              await processMessage(body);
+
+          } catch (error) {
+              console.error('Error processing message:', error);
+              throw error; // This will return the message to the queue
+          }
+      }
+
+      return {
+          statusCode: 200,
+          body: JSON.stringify({ message: 'SQS messages processed successfully' })
+      };
+  }
+
+  // Handle HTTP events
+  if (event.httpMethod) {
+      if (event.httpMethod === 'POST' && event.path === '/users') {
+          // Handle POST /users
+          const body = JSON.parse(event.body);
+          // Your POST logic here
+
+          return {
+              statusCode: 200,
+              headers: {
+                  'Access-Control-Allow-Origin': '*',
+                  'Access-Control-Allow-Credentials': true,
+              },
+              body: JSON.stringify({ message: 'User created' })
+          };
+      }
+
+      if (event.httpMethod === 'GET' && event.path.startsWith('/users/')) {
+          // Handle GET /users/{id}
+          const userId = event.pathParameters.id;
+          // Your GET logic here
+
+          return {
+              statusCode: 200,
+              headers: {
+                  'Access-Control-Allow-Origin': '*',
+                  'Access-Control-Allow-Credentials': true,
+              },
+              body: JSON.stringify({ userId })
+          };
+      }
+  }
+
+  return {
+      statusCode: 400,
+      body: JSON.stringify({ message: 'Invalid request' })
+  };
+};
+
+async function processMessage(messageBody: any): Promise<void> {
+  // Implement your message processing logic
+  // This function will be called for each SQS message
+}

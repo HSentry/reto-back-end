@@ -5,34 +5,59 @@ Resources:
     Properties:
       Name: ${self:service}-event-bridge
 
-  SQS_PE:
-    Type: AWS::SQS::Queue
+  EventRule:
+    Type: AWS::Events::Rule
     Properties:
-      QueueName: ${self:service}-sqs_pe
-      MessageRetentionPeriod: 1209600
-      VisibilityTimeout: 900
-  
-  SQS_CL:
-    Type: AWS::SQS::Queue
-    Properties:
-      QueueName: ${self:service}-sqs_cl
-      MessageRetentionPeriod: 1209600
-      VisibilityTimeout: 900
+      Name: ${self:service}-rule
+      Description: "Event to update recored appointments"
+      EventBusName: !Ref EventBus
+      EventPattern:
+        source:
+          - "appointment.events" 
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt SQS.Arn
+          Id: "SendToSQS"
 
   SQS:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: ${self:service}-sqs
-      MessageRetentionPeriod: 1209600
-      VisibilityTimeout: 900
 
 
+  # SNS Topics
   PEAppointmentTopic:
     Type: AWS::SNS::Topic
     Properties:
       TopicName: ${self:service}-pe-topic-${self:provider.stage}
-      
+
   CLAppointmentTopic:
     Type: AWS::SNS::Topic
     Properties:
       TopicName: ${self:service}-cl-topic-${self:provider.stage}
+
+  # SQS Queues
+  SQS_PE:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: ${self:service}-sqs_pe
+
+  SQS_CL:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: ${self:service}-sqs_cl
+
+  # SNS Topic Subscriptions to SQS
+  PESQSSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref PEAppointmentTopic
+      Protocol: sqs
+      Endpoint: !GetAtt SQS_PE.Arn
+
+  CLSQSSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref CLAppointmentTopic
+      Protocol: sqs
+      Endpoint: !GetAtt SQS_CL.Arn

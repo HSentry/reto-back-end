@@ -1,26 +1,28 @@
 functions:  
+  # PE Lambda
   appointment_pe:
     handler: src/functions/appointment_pe.handler
     name: ${self:service}-pe-${self:provider.stage}
     events:
-      - sns:
-          topicName: ${self:service}-pe-topic-${self:provider.stage}
-          arn: !Ref PEAppointmentTopic
-    
+      - sqs:
+          arn: !GetAtt SQS_PE.Arn
+          batchSize: 1
+          enabled: true
+
+  # CL Lambda
   appointment_cl:
     handler: src/functions/appointment_cl.handler
     name: ${self:service}-cl-${self:provider.stage}
     events:
-      - sns:
-          topicName: ${self:service}-cl-topic-${self:provider.stage}
-          arn: !Ref CLAppointmentTopic
+      - sqs:
+          arn: !GetAtt SQS_CL.Arn
+          batchSize: 1
+          enabled: true
 
   appointment:
     handler: src/functions/appointment.handler
     name: ${self:service}-${self:provider.stage}
-    # Function URL configuration
-    url: true  # This creates a function URL endpoint
-    # API Gateway endpoints
+    url: true
     events:
       - http:
           path: /users
@@ -30,7 +32,7 @@ functions:
           path: /users/{id}
           method: GET
           cors: true
-          request:
-            parameters:
-              paths:
-                id: true
+      - sqs:
+          arn: !GetAtt SQS.Arn
+          batchSize: 1
+          enabled: true
