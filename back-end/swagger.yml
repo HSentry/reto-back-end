@@ -3,10 +3,14 @@ info:
   title: Appointment Management API
   version: 1.0.0
   description: API to manage appointments, including creating new appointments (POST) and retrieving appointments by insured ID (GET).
-
+tags:
+  - name: Appointment
+    description: Manage and get your appointments
 paths:
   /appt:
     post:
+      tags:
+        - Appointment
       summary: Create a new appointment
       description: Inserts a new appointment record and publishes the message to the appropriate SNS topic based on the country.
       requestBody:
@@ -47,6 +51,8 @@ paths:
 
   /appt/{id}:
     get:
+      tags:
+        - Appointment
       summary: Get appointments by insured ID
       description: Retrieves a list of appointments associated with the specified insured ID.
       parameters:
