@@ -24,6 +24,25 @@ provider:
             - dynamodb:DeleteItem
           Resource:
             - Fn::GetAtt: [AppointmentTable, Arn]
+        - Effect: Allow
+          Action:
+            - sns:Publish
+          Resource:
+            - Fn::GetAtt: [PEAppointmentTopic, Arn]
+            - Fn::GetAtt: [CLAppointmentTopic, Arn]
+        - Effect: Allow
+          Action:
+            - sqs:SendMessage
+          Resource:
+            - Fn::GetAtt: [SQS_PE, Arn]
+            - Fn::GetAtt: [SQS_CL, Arn]
+            - Fn::GetAtt: [SQS, Arn]
+        - Effect: Allow
+          Action:
+            - rds-db:connect
+          Resource:
+            - "TO BE REPLACED"
+            
   environment:
     APPT_TABLE: ${self:service}-appt-table
     PE_TOPIC_ARN: !GetAtt PEAppointmentTopic.Arn

@@ -1,0 +1,87 @@
+openapi: 3.0.3
+info:
+  title: Appointment Management API
+  version: 1.0.0
+  description: API to manage appointments, including creating new appointments (POST) and retrieving appointments by insured ID (GET).
+
+paths:
+  /appt:
+    post:
+      summary: Create a new appointment
+      description: Inserts a new appointment record and publishes the message to the appropriate SNS topic based on the country.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                insureId:
+                  type: string
+                  description: Unique identifier for the insured person.
+                scheduleId:
+                  type: integer
+                  description: ID of the schedule.
+                countryISO:
+                  type: string
+                  description: ISO code of the country (e.g., "PE" or "CL").
+              required:
+                - insureId
+                - scheduleId
+                - countryISO
+      responses:
+        200:
+          description: Appointment created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Appt created"
+        400:
+          description: Bad request.
+        500:
+          description: Internal server error.
+
+  /appt/{id}:
+    get:
+      summary: Get appointments by insured ID
+      description: Retrieves a list of appointments associated with the specified insured ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The insured ID for which to retrieve appointments.
+          schema:
+            type: string
+      responses:
+        200:
+          description: List of appointments retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  listOfAppointments:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        apptId:
+                          type: string
+                          description: Unique appointment ID.
+                        insureId:
+                          type: string
+                          description: ID of the insured person.
+                        scheduleId:
+                          type: integer
+                          description: ID of the schedule.
+                        countryISO:
+                          type: string
+                          description: ISO code of the country.
+        400:
+          description: Bad request.
+        500:
+          description: Internal server error.
