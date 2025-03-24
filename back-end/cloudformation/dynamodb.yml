@@ -1,13 +1,25 @@
 Resources:
 
-  UsersTable:
+  AppointmentTable:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
-        - AttributeName: userId
+        - AttributeName: apptId
+          AttributeType: S
+        - AttributeName: insureId
           AttributeType: S
       KeySchema:
-        - AttributeName: userId
+        - AttributeName: apptId
           KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: InsureIndex
+          KeySchema:
+            - AttributeName: insureId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
       BillingMode: PAY_PER_REQUEST
-      TableName: ${param:tableName}
+      SSESpecification:
+        SSEEnabled: true
+      BillingMode: PAY_PER_REQUEST
+      TableName: ${self:service}-appt-table

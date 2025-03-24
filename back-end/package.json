@@ -31,7 +31,9 @@
     "@aws-sdk/client-eventbridge": "^3.772.0",
     "@aws-sdk/client-sns": "^3.772.0",
     "@aws-sdk/lib-dynamodb": "^3.585.0",
+    "@aws-sdk/rds-signer": "^3.772.0",
     "express": "^4.19.2",
+    "mysql2-promise": "^0.1.4",
     "serverless-http": "^3.2.0"
   }
 }

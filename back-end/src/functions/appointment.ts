@@ -1,44 +1,14 @@
-// const AWS = require('aws-sdk');
-// const sns = new AWS.SNS();
-
-// const publishToPE = async (message) => {
-//   const params = {
-//     Message: JSON.stringify(message),
-//     TopicArn: 'PE_TOPIC_ARN'  // Replace with actual PE topic ARN
-//   };
-
-//   try {
-//     await sns.publish(params).promise();
-//     console.log('Message published to PE topic');
-//   } catch (error) {
-//     console.error('Error publishing to PE topic:', error);
-//     throw error;
-//   }
-// };
-
-// const publishToCL = async (message) => {
-//   const params = {
-//     Message: JSON.stringify(message),
-//     TopicArn: 'CL_TOPIC_ARN'  // Replace with actual CL topic ARN
-//   };
-
-//   try {
-//     await sns.publish(params).promise();
-//     console.log('Message published to CL topic');
-//   } catch (error) {
-//     console.error('Error publishing to CL topic:', error);
-//     throw error;
-//   }
-// };
-
 import { SNSClient, PublishCommand } from "@aws-sdk/client-sns";
+import { v4 as uuidv4 } from 'uuid';
+import { getAppointmentsByInsureId, ddbPut, ddbUpdate } from "@src/functions/helpers/dynamoDbHelper"
 
 const snsClient = new SNSClient({});
+const { CL_TOPIC_ARN, PE_TOPIC_ARN, APPT_TABLE } = process.env;
 
 const publishToPE = async (message: any): Promise<void> => {
   const params = {
     Message: JSON.stringify(message),
-    TopicArn: 'PE_TOPIC_ARN'  // Reemplazar con el ARN real del tópico PE
+    TopicArn: PE_TOPIC_ARN 
   };
 
   try {
@@ -54,7 +24,7 @@ const publishToPE = async (message: any): Promise<void> => {
 const publishToCL = async (message: any): Promise<void> => {
   const params = {
     Message: JSON.stringify(message),
-    TopicArn: 'CL_TOPIC_ARN'  // Reemplazar con el ARN real del tópico CL
+    TopicArn: CL_TOPIC_ARN
   };
 
   try {
@@ -69,20 +39,24 @@ const publishToCL = async (message: any): Promise<void> => {
 
 
 export const handler = async (event: any): Promise<any> => {
-  // Check if the event is from SQS
+
   if (event.Records) {
-      // Process SQS messages
       for (const record of event.Records) {
           try {
               const body = JSON.parse(record.body);
-              console.log('Processing SQS message:', body);
+              console.log('Processing SQS update:', body);
 
-              // Your SQS message processing logic here
-              await processMessage(body);
+              const appIdFromSQS = body.apptId
+              const updateBody = {
+                apptId: appIdFromSQS,
+                status: 'completed'
+              }
+              const updateResponse = ddbUpdate(APPT_TABLE, updateBody);
+              console.log('Db response update:' , updateResponse);
 
           } catch (error) {
               console.error('Error processing message:', error);
-              throw error; // This will return the message to the queue
+              throw error; 
           }
       }
 
@@ -92,12 +66,44 @@ export const handler = async (event: any): Promise<any> => {
       };
   }
 
-  // Handle HTTP events
+
   if (event.httpMethod) {
-      if (event.httpMethod === 'POST' && event.path === '/users') {
-          // Handle POST /users
+      if (event.httpMethod === 'POST' && event.path === '/appt') {
+
+          let messageToPublish : any
           const body = JSON.parse(event.body);
-          // Your POST logic here
+          const apptIdUUID = uuidv4();
+
+          const apptTableRecord = {
+            apptId : apptIdUUID,
+            insureId : body.insureId,
+            scheduleId: body.scheduleId,
+            countryISO: body.countryISO,
+            status : 'pending'
+          };
+
+          const response = await ddbPut(APPT_TABLE, apptTableRecord);
+          console.log('Db response insert:' , response);
+
+          if (body.countryISO = 'PE'){
+            messageToPublish = {
+              apptId : apptIdUUID,
+              insureId : body.insureId,
+              scheduleId: body.scheduleId,
+              countryISO: body.countryISO,
+            }
+            await publishToPE(messageToPublish)
+          }
+
+          if (body.countryISO = 'CL'){
+            messageToPublish = {
+              apptId : apptIdUUID,
+              insureId : body.insureId,
+              scheduleId: body.scheduleId,
+              countryISO: body.countryISO,
+            }
+            await publishToCL(messageToPublish)
+          }
 
           return {
               statusCode: 200,
@@ -105,14 +111,16 @@ export const handler = async (event: any): Promise<any> => {
                   'Access-Control-Allow-Origin': '*',
                   'Access-Control-Allow-Credentials': true,
               },
-              body: JSON.stringify({ message: 'User created' })
+              body: JSON.stringify({ message: 'Appt created' })
           };
       }
 
-      if (event.httpMethod === 'GET' && event.path.startsWith('/users/')) {
-          // Handle GET /users/{id}
-          const userId = event.pathParameters.id;
-          // Your GET logic here
+      if (event.httpMethod === 'GET' && event.path.startsWith('/appt/')) {
+
+          const insureId = event.pathParameters.id;
+
+          const listOfAppointments = await getAppointmentsByInsureId(insureId);
+          console.log("List of appt retrieved by Insure Id")
 
           return {
               statusCode: 200,
@@ -120,7 +128,7 @@ export const handler = async (event: any): Promise<any> => {
                   'Access-Control-Allow-Origin': '*',
                   'Access-Control-Allow-Credentials': true,
               },
-              body: JSON.stringify({ userId })
+              body: JSON.stringify({ listOfAppointments })
           };
       }
   }
@@ -130,8 +138,3 @@ export const handler = async (event: any): Promise<any> => {
       body: JSON.stringify({ message: 'Invalid request' })
   };
 };
-
-async function processMessage(messageBody: any): Promise<void> {
-  // Implement your message processing logic
-  // This function will be called for each SQS message
-}

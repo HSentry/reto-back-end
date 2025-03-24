@@ -25,11 +25,11 @@ functions:
     url: true
     events:
       - http:
-          path: /users
+          path: /appt
           method: POST
           cors: true
       - http:
-          path: /users/{id}
+          path: /appt/{id}
           method: GET
           cors: true
       - sqs:
