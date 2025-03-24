@@ -12,7 +12,7 @@ export class DatabaseService {
 
     private async createConnection(): Promise<Connection> {
         try {
-            // Get database configuration from environment variables
+            // Configuracion de base de datos a partir de variables de ambiente
             const dbConfig = {
                 host: process.env.DB_HOST!,
                 user: process.env.DB_USER!,
@@ -21,7 +21,7 @@ export class DatabaseService {
                 region: process.env.AWS_REGION!
             };
 
-            // Create RDS Signer for IAM authentication
+            // Crear RDS Signer
             const signer = new Signer({
                 hostname: dbConfig.host,
                 port: dbConfig.port,
@@ -29,10 +29,10 @@ export class DatabaseService {
                 username: dbConfig.user
             });
 
-            // Get authentication token
+            // Token de autenticacion
             const token = await signer.getAuthToken();
 
-            // Create connection
+            // Crear conexion
             const connection = await mysql.createConnection({
                 host: dbConfig.host,
                 user: dbConfig.user,
@@ -51,33 +51,13 @@ export class DatabaseService {
         }
     }
 
-    async insertAppointmentPE(appointment: Appointment): Promise<void> {
+    //Funcion para insertar un appointment en la tabla mysql_cl o mysql_pe
+    async insertAppointment(appointment: Appointment, table : string): Promise<void> {
         try {
             const connection = await this.createConnection();
 
             const query = `
-                INSERT INTO mysql_pe (insuredId, scheduleId, countryISO)
-                VALUES (?, ?, ?)
-            `;
-
-            const values = [appointment.insuredId, appointment.scheduleId, appointment.countryISO];
-
-            await connection.execute(query, values);
-            console.log('Employee PE inserted successfully');
-
-            await connection.end();
-        } catch (error) {
-            console.error('Error inserting appointment:', error);
-            throw error;
-        }
-    }
-
-    async insertAppointmentCL(appointment: Appointment): Promise<void> {
-        try {
-            const connection = await this.createConnection();
-
-            const query = `
-                INSERT INTO mysql_cl (insuredId, scheduleId, countryISO)
+                INSERT INTO ${table} (insuredId, scheduleId, countryISO)
                 VALUES (?, ?, ?)
             `;
 

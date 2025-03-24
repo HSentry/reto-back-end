@@ -40,6 +40,7 @@ const publishToCL = async (message: any): Promise<void> => {
 
 export const handler = async (event: any): Promise<any> => {
 
+  //Condicional que evalua la llegada de un Evento SQS y actualiza el status de appointment a complete
   if (event.Records) {
       for (const record of event.Records) {
           try {
@@ -67,6 +68,7 @@ export const handler = async (event: any): Promise<any> => {
   }
 
 
+  //Condicional que evalua la llegada de un evento de ApiGateway en metodo POST. Este metodo es para insertar un nuevo appointment
   if (event.httpMethod) {
       if (event.httpMethod === 'POST' && event.path === '/appt') {
 
@@ -115,22 +117,23 @@ export const handler = async (event: any): Promise<any> => {
           };
       }
 
-      if (event.httpMethod === 'GET' && event.path.startsWith('/appt/')) {
+  //Condicional que evalua la llegada de un evento de ApiGateway en metodo GET. Retorna la lista de appointments con respecto a la variable InsureId
+  if (event.httpMethod === 'GET' && event.path.startsWith('/appt/')) {
 
-          const insureId = event.pathParameters.id;
+      const insureId = event.pathParameters.id;
 
-          const listOfAppointments = await getAppointmentsByInsureId(insureId);
-          console.log("List of appt retrieved by Insure Id")
+      const listOfAppointments = await getAppointmentsByInsureId(insureId);
+      console.log("List of appt retrieved by Insure Id")
 
-          return {
-              statusCode: 200,
-              headers: {
-                  'Access-Control-Allow-Origin': '*',
-                  'Access-Control-Allow-Credentials': true,
-              },
-              body: JSON.stringify({ listOfAppointments })
-          };
-      }
+      return {
+          statusCode: 200,
+          headers: {
+              'Access-Control-Allow-Origin': '*',
+              'Access-Control-Allow-Credentials': true,
+          },
+          body: JSON.stringify({ listOfAppointments })
+      };
+  }
   }
 
   return {

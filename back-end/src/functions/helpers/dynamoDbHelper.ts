@@ -7,6 +7,7 @@ const keyMapping: { [key: string]: string } = {
     [APPT_TABLE!]: 'apptId'
 };
 
+//Funcion para insertar datos en tabla DynamoDB
 const ddbPut = async (table_name: any , item: Record<string, any>): Promise<void> => {
     const ddbClient = new DynamoDBClient({ region: REGION });
     const ddbDocClient = DynamoDBDocumentClient.from(ddbClient);
@@ -27,6 +28,7 @@ const ddbPut = async (table_name: any , item: Record<string, any>): Promise<void
     }
 };
 
+//Funcion para actualizar datos en tabla DynamoDB
 const ddbUpdate = async (table_name: any, item: Record<string, any>): Promise<any> => {
     const ddbClient = new DynamoDBClient({ region: REGION });
     const ddbDocClient = DynamoDBDocumentClient.from(ddbClient);
@@ -71,6 +73,7 @@ const ddbUpdate = async (table_name: any, item: Record<string, any>): Promise<an
     }
 };
 
+//Funcion para recuperar datos con respecto a la variable insureId. Se usa la GSI InsureIndex
 const getAppointmentsByInsureId = async (insureId: string): Promise<Record<string, any>[]> => {
     const ddbClient = new DynamoDBClient({ region: REGION });
 

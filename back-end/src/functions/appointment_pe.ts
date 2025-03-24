@@ -8,6 +8,7 @@ export const handler = async (event: SQSEvent, context: Context) => {
             const snsMessage = JSON.parse(record.body);
             const payload = JSON.parse(snsMessage.Message);
 
+            //Crear conexion de base de datos
             const dbService = new DatabaseService();
 
             const newAppointment: Appointment = {
@@ -16,7 +17,8 @@ export const handler = async (event: SQSEvent, context: Context) => {
                 countryISO: payload.countryISO
             };
 
-            await dbService.insertAppointmentPE(newAppointment);
+            //Insertar nuevo appointment en la base de datos
+            await dbService.insertAppointment(newAppointment, "mysql_pe");
 
             const eventBridgePayload = {
                 apptId : payload.apptId

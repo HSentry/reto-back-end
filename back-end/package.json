@@ -6,6 +6,7 @@
     "@types/aws-lambda": "^8.10.80",
     "@types/dotenv-safe": "^8.1.2",
     "@types/jest": "^26.0.24",
+    "@types/mocha": "^10.0.10",
     "@types/node": "^16.4.1",
     "@types/serverless": "^1.78.32",
     "@typescript-eslint/eslint-plugin": "^4.28.4",
@@ -33,6 +34,7 @@
     "@aws-sdk/lib-dynamodb": "^3.585.0",
     "@aws-sdk/rds-signer": "^3.772.0",
     "express": "^4.19.2",
+    "lambda-local": "^2.2.0",
     "mysql2-promise": "^0.1.4",
     "serverless-http": "^3.2.0"
   }
